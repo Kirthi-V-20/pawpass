@@ -3,6 +3,7 @@ export const COLORS = {
     DEFAULT: "#F97316",
     hover: "#EA580C",
     light: "#FFEDD5",
+    background: "#FFF7ED",
   },
   neutral: {
     black: "#0F172A",
@@ -20,9 +21,15 @@ export const COLORS = {
     800: "#1E293B",
     900: "#0F172A",
   },
+  
   status: {
     red: "#EF4444",
+    redLight: "#FEF2F2",
+
     green: "#22C55E",
+    greenLight: "#F0FDF4",
+
     yellow: "#EAB308",
-  }
+    yellowLight: "#FEFCE8",
+  },
 } as const;
