@@ -24,6 +24,7 @@ export default function LostPetCard({
   onEdit,
   onDelete,
 }: LostPetCardProps) {
+  const displayPhoto = report.photo || pet.photo;
   return (
     <div
       className="w-[280px] overflow-hidden rounded-xl border bg-white"
@@ -31,16 +32,15 @@ export default function LostPetCard({
         borderColor: COLORS.grey[200],
       }}
     >
-      {/* Pet Image */}
       <div
         className="relative flex h-45 items-center justify-center"
         style={{
           backgroundColor: COLORS.primary.background,
         }}
       >
-        {pet.photo ? (
+        {displayPhoto ? (
           <img
-            src={pet.photo}
+            src={displayPhoto}
             alt={pet.name}
             className="h-full w-full object-cover"
           />
@@ -58,7 +58,6 @@ export default function LostPetCard({
           </div>
         )}
 
-        {/* Lost Badge */}
         <div
           className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-semibold"
           style={{
@@ -69,7 +68,6 @@ export default function LostPetCard({
           {localize.lost.status_lost}
         </div>
 
-        {/* Gender Icon */}
         <div className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm">
           {pet.gender === "Male" ? (
             <MaleIcon size={20} color={COLORS.primary.DEFAULT} />
@@ -79,9 +77,7 @@ export default function LostPetCard({
         </div>
       </div>
 
-      {/* Pet Details */}
       <div className="p-2">
-        {/* Pet Name & Species */}
         <div className="mb-1">
           <h2
             className="text-lg font-semibold"
@@ -102,7 +98,6 @@ export default function LostPetCard({
           </p>
         </div>
 
-        {/* Last Seen Location */}
         <div className="mb-1 flex items-center justify-between">
           <span
             className="text-sm"
@@ -124,7 +119,6 @@ export default function LostPetCard({
           </span>
         </div>
 
-        {/* Last Seen Date */}
         <div className="mb-1 flex items-center justify-between">
           <span
             className="text-sm"
@@ -145,7 +139,6 @@ export default function LostPetCard({
           </span>
         </div>
 
-        {/* Last Seen Time */}
         <div className="flex items-center justify-between">
           <span
             className="text-sm"
@@ -166,7 +159,6 @@ export default function LostPetCard({
           </span>
         </div>
 
-        {/* Action Buttons */}
         <div
           className="mt-4 grid grid-cols-3 gap-3 border-t pt-3"
           style={{
@@ -182,7 +174,7 @@ export default function LostPetCard({
               color: COLORS.neutral.black,
             }}
           >
-            {localize.common.view_details}{" "}
+            {localize.common.view_details}
           </button>
 
           <button
@@ -194,7 +186,7 @@ export default function LostPetCard({
               color: COLORS.neutral.black,
             }}
           >
-            {localize.common.edit}{" "}
+            {localize.common.edit}
           </button>
 
           <button
@@ -206,7 +198,7 @@ export default function LostPetCard({
               color: COLORS.status.red,
             }}
           >
-            {localize.common.delete}{" "}
+            {localize.common.delete}
           </button>
         </div>
       </div>

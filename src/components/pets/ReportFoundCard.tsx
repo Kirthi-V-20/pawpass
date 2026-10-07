@@ -73,6 +73,8 @@ export default function ReportFoundCard({
   onViewDetails,
   onReportFound,
 }: ReportFoundCardProps) {
+  const displayPhoto = report.photo || pet.photo;
+
   return (
     <div
       className="w-[280px] overflow-hidden rounded-xl border bg-white"
@@ -86,9 +88,9 @@ export default function ReportFoundCard({
           backgroundColor: COLORS.primary.background,
         }}
       >
-        {pet.photo ? (
+        {displayPhoto ? (
           <img
-            src={pet.photo}
+            src={displayPhoto}
             alt={pet.name}
             className="h-full w-full object-cover"
           />
