@@ -59,6 +59,10 @@ export default function LostPetsPage() {
     report: LostPetReport;
   } | null>(null);
 
+  /*
+   * Get only active lost-pet reports belonging to the
+   * currently logged-in user.
+   */
   const lostPetsWithDetails = useMemo(() => {
     if (!user) {
       return [];
@@ -94,6 +98,9 @@ export default function LostPetsPage() {
       );
   }, [lostPets, pets, user]);
 
+  /*
+   * Apply search and species filters.
+   */
   const filteredLostPets = useMemo(() => {
     const searchValue = search.trim().toLowerCase();
 
@@ -107,6 +114,9 @@ export default function LostPetsPage() {
     });
   }, [lostPetsWithDetails, search, selectedSpecies]);
 
+  /*
+   * Open lost pet details.
+   */
   const handleViewDetails = (pet: Pet, report: LostPetReport) => {
     setSelectedLostPet({
       pet,
@@ -116,11 +126,17 @@ export default function LostPetsPage() {
     setIsDetailsOpen(true);
   };
 
+  /*
+   * Close lost pet details.
+   */
   const handleCloseDetails = () => {
     setIsDetailsOpen(false);
     setSelectedLostPet(null);
   };
 
+  /*
+   * Open edit lost pet modal.
+   */
   const handleEdit = (pet: Pet, report: LostPetReport) => {
     setSelectedLostPet({
       pet,
@@ -130,6 +146,9 @@ export default function LostPetsPage() {
     setIsEditOpen(true);
   };
 
+  /*
+   * Open delete confirmation.
+   */
   const handleDelete = (pet: Pet, report: LostPetReport) => {
     setSelectedLostPet({
       pet,
@@ -139,6 +158,9 @@ export default function LostPetsPage() {
     setIsDeleteConfirmationOpen(true);
   };
 
+  /*
+   * Delete lost pet report and restore pet status.
+   */
   const handleConfirmDelete = () => {
     if (!selectedLostPet) {
       return;
@@ -156,6 +178,9 @@ export default function LostPetsPage() {
     setSelectedLostPet(null);
   };
 
+  /*
+   * Open mark-as-found confirmation.
+   */
   const handleMarkAsFoundClick = () => {
     if (!selectedLostPet) {
       return;
@@ -164,6 +189,9 @@ export default function LostPetsPage() {
     setIsFoundConfirmationOpen(true);
   };
 
+  /*
+   * Mark pet as found.
+   */
   const handleConfirmMarkAsFound = () => {
     if (!selectedLostPet) {
       return;
@@ -195,6 +223,9 @@ export default function LostPetsPage() {
     setSelectedLostPet(null);
   };
 
+  /*
+   * Open Report Lost modal.
+   */
   const handleReportLost = () => {
     setSelectedLostPet(null);
     setIsReportLostOpen(true);
@@ -208,8 +239,11 @@ export default function LostPetsPage() {
           backgroundColor: COLORS.primary.background,
         }}
       >
+        {/* ------------------------------------------------
+            PAGE HEADER
+        ------------------------------------------------ */}
         <div className="mb-2 shrink-0">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1
                 className="text-2xl font-semibold"
@@ -244,7 +278,10 @@ export default function LostPetsPage() {
           </div>
         </div>
 
-        <div className="mb-4 flex w-full shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
+        {/* ------------------------------------------------
+            SEARCH + SPECIES FILTER
+        ------------------------------------------------ */}
+        <div className="mb-3 flex w-full shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
           <input
             type="text"
             value={search}
@@ -264,6 +301,9 @@ export default function LostPetsPage() {
           />
         </div>
 
+        {/* ------------------------------------------------
+            LOST PETS CONTENT
+        ------------------------------------------------ */}
         <div
           className="lost-pets-scroll-area min-h-0 flex-1 overflow-y-auto"
           style={{
@@ -272,6 +312,13 @@ export default function LostPetsPage() {
           }}
         >
           {filteredLostPets.length > 0 ? (
+            /*
+             * Same responsive grid as My Pets:
+             *
+             * Mobile  -> 1 card
+             * Tablet  -> 2 cards
+             * Desktop -> 3 cards
+             */
             <div className="grid grid-cols-1 gap-5 pb-6 md:grid-cols-2 xl:grid-cols-3">
               {filteredLostPets.map(({ pet, report }) => (
                 <LostPetCard
@@ -285,7 +332,22 @@ export default function LostPetsPage() {
               ))}
             </div>
           ) : (
-            <div className="flex min-h-[400px] flex-col items-center justify-center px-6 text-center">
+            /*
+             * Empty state is now exactly like My Pets:
+             * - white background
+             * - border
+             * - rounded corners
+             * - same minimum height
+             * - centered content
+             * - mobile friendly
+             */
+            <div
+              className="flex min-h-[400px] flex-col items-center justify-center rounded-xl border px-6 text-center"
+              style={{
+                backgroundColor: COLORS.neutral.white,
+                borderColor: COLORS.grey[200],
+              }}
+            >
               <h2
                 className="text-lg font-semibold"
                 style={{
@@ -294,17 +356,46 @@ export default function LostPetsPage() {
               >
                 {localize.lost.no_lost_pets}
               </h2>
+
+              <p
+                className="mt-2 max-w-sm text-sm"
+                style={{
+                  color: COLORS.grey[600],
+                }}
+              >
+                {localize.lost.no_lost_pets_description}
+              </p>
+
+              {lostPets.length === 0 && (
+                <button
+                  type="button"
+                  onClick={handleReportLost}
+                  className="mt-5 rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90"
+                  style={{
+                    backgroundColor: COLORS.primary.DEFAULT,
+                    color: COLORS.neutral.white,
+                  }}
+                >
+                  + {localize.lost.report_lost_btn}
+                </button>
+              )}
             </div>
           )}
         </div>
       </div>
 
+      {/* ------------------------------------------------
+          HIDE SCROLLBAR
+      ------------------------------------------------ */}
       <style jsx>{`
         .lost-pets-scroll-area::-webkit-scrollbar {
           display: none;
         }
       `}</style>
 
+      {/* ------------------------------------------------
+          REPORT LOST MODAL
+      ------------------------------------------------ */}
       <ReportLostModal
         open={isReportLostOpen}
         onClose={() => {
@@ -313,6 +404,9 @@ export default function LostPetsPage() {
         }}
       />
 
+      {/* ------------------------------------------------
+          EDIT LOST PET MODAL
+      ------------------------------------------------ */}
       <EditLostPetModal
         open={isEditOpen}
         pet={selectedLostPet?.pet ?? null}
@@ -323,6 +417,9 @@ export default function LostPetsPage() {
         }}
       />
 
+      {/* ------------------------------------------------
+          LOST PET DETAILS MODAL
+      ------------------------------------------------ */}
       <LostPetDetailsModal
         open={isDetailsOpen}
         pet={selectedLostPet?.pet ?? null}
@@ -331,6 +428,9 @@ export default function LostPetsPage() {
         onMarkAsFound={handleMarkAsFoundClick}
       />
 
+      {/* ------------------------------------------------
+          MARK AS FOUND CONFIRMATION
+      ------------------------------------------------ */}
       <ConfirmationModal
         open={isFoundConfirmationOpen}
         title={localize.lost.mark_found_title}
@@ -345,6 +445,9 @@ export default function LostPetsPage() {
         }}
       />
 
+      {/* ------------------------------------------------
+          DELETE LOST PET MODAL
+      ------------------------------------------------ */}
       <DeleteLostPetModal
         open={isDeleteConfirmationOpen}
         petName={selectedLostPet?.pet.name ?? ""}

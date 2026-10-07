@@ -93,6 +93,12 @@ export default function LocationPicker({
 
   const bestGpsPositionRef = useRef<GeolocationPosition | null>(null);
 
+  /*
+   * Prevent multiple reverse-geocoding requests
+   * during one "Use Current Location" action.
+   */
+  const reverseGeocodeStartedRef = useRef(false);
+
   const initialPosition: Position =
     typeof latitude === "number" &&
     typeof longitude === "number" &&
@@ -103,15 +109,23 @@ export default function LocationPicker({
 
   const [mapPosition, setMapPosition] = useState<Position>(initialPosition);
 
+  /*
+   * Clear the GPS watch when the component is unmounted.
+   */
   useEffect(() => {
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
+
         watchIdRef.current = null;
       }
     };
   }, []);
 
+  /*
+   * If the parent provides latitude/longitude,
+   * update the map and selected position.
+   */
   useEffect(() => {
     if (typeof latitude !== "number" || typeof longitude !== "number") {
       return;
@@ -127,6 +141,9 @@ export default function LocationPicker({
     setSelectedPosition(nextPosition);
   }, [latitude, longitude]);
 
+  /*
+   * Search locations.
+   */
   const searchLocations = useCallback(async () => {
     const query = searchQuery.trim();
 
@@ -177,6 +194,9 @@ export default function LocationPicker({
     void searchLocations();
   };
 
+  /*
+   * Handle selecting a location from search results.
+   */
   const handleResultSelect = (result: SearchResult) => {
     const position: Position = [result.latitude, result.longitude];
 
@@ -192,10 +212,22 @@ export default function LocationPicker({
     onLocationSelect(result.latitude, result.longitude, locationName);
   };
 
+  /*
+   * Reverse geocode GPS coordinates.
+   *
+   * A timeout is used so a slow Nominatim response
+   * does not block the location picker.
+   */
   const reverseGeocode = async (
     latitudeValue: number,
     longitudeValue: number,
   ): Promise<string> => {
+    const controller = new AbortController();
+
+    const timeoutId = window.setTimeout(() => {
+      controller.abort();
+    }, 8000);
+
     try {
       const response = await fetch(
         `/api/location/reverse?lat=${encodeURIComponent(
@@ -204,6 +236,7 @@ export default function LocationPicker({
         {
           method: "GET",
           cache: "no-store",
+          signal: controller.signal,
         },
       );
 
@@ -215,15 +248,29 @@ export default function LocationPicker({
 
       return data.name ?? "";
     } catch (error) {
-      console.error("Reverse geocoding failed:", error);
+      if (error instanceof DOMException && error.name === "AbortError") {
+        console.warn("Reverse geocoding timed out");
+      } else {
+        console.error("Reverse geocoding failed:", error);
+      }
 
+      /*
+       * GPS coordinates are still valid even if
+       * reverse geocoding fails.
+       */
       return "";
+    } finally {
+      window.clearTimeout(timeoutId);
     }
   };
 
+  /*
+   * Apply the best GPS position.
+   */
   const applyGpsPosition = useCallback(
     async (position: GeolocationPosition) => {
       const latitudeValue = position.coords.latitude;
+
       const longitudeValue = position.coords.longitude;
 
       if (!Number.isFinite(latitudeValue) || !Number.isFinite(longitudeValue)) {
@@ -232,20 +279,48 @@ export default function LocationPicker({
 
       const nextPosition: Position = [latitudeValue, longitudeValue];
 
+      /*
+       * Update the map immediately.
+       */
       setMapPosition(nextPosition);
       setSelectedPosition(nextPosition);
 
+      /*
+       * Use a fallback name immediately.
+       *
+       * This means the GPS location is usable even
+       * when reverse geocoding is slow or unavailable.
+       */
       const fallbackName = localize.lost.selected_map_location;
 
       setSelectedLocationName(fallbackName);
       setSearchQuery(fallbackName);
 
+      /*
+       * Send the GPS coordinates to the parent
+       * immediately.
+       */
       onLocationSelect(latitudeValue, longitudeValue, fallbackName);
+
+      /*
+       * Prevent multiple reverse-geocoding requests
+       * from the same GPS action.
+       */
+      if (reverseGeocodeStartedRef.current) {
+        return;
+      }
+
+      reverseGeocodeStartedRef.current = true;
 
       const locationName = await reverseGeocode(latitudeValue, longitudeValue);
 
+      /*
+       * If reverse geocoding succeeds, replace the
+       * fallback name with the real location name.
+       */
       if (locationName) {
         setSelectedLocationName(locationName);
+
         setSearchQuery(locationName);
 
         onLocationSelect(latitudeValue, longitudeValue, locationName);
@@ -254,10 +329,17 @@ export default function LocationPicker({
     [onLocationSelect],
   );
 
+  /*
+   * Handle GPS position updates.
+   *
+   * We keep the most accurate GPS position received.
+   */
   const handleGpsPosition = useCallback(
     (position: GeolocationPosition) => {
       const latitudeValue = position.coords.latitude;
+
       const longitudeValue = position.coords.longitude;
+
       const accuracy = position.coords.accuracy;
 
       console.log("GPS reading:", {
@@ -276,6 +358,9 @@ export default function LocationPicker({
 
       const previousPosition = bestGpsPositionRef.current;
 
+      /*
+       * First valid GPS position.
+       */
       if (!previousPosition) {
         bestGpsPositionRef.current = position;
 
@@ -292,6 +377,10 @@ export default function LocationPicker({
         return;
       }
 
+      /*
+       * If a more accurate GPS position arrives,
+       * use it.
+       */
       if (accuracy < previousPosition.coords.accuracy) {
         bestGpsPositionRef.current = position;
 
@@ -301,6 +390,9 @@ export default function LocationPicker({
     [applyGpsPosition],
   );
 
+  /*
+   * Handle GPS errors.
+   */
   const handleGpsError = useCallback((error: GeolocationPositionError) => {
     console.error("Current location failed:", {
       code: error.code,
@@ -333,6 +425,9 @@ export default function LocationPicker({
     }
   }, []);
 
+  /*
+   * Start getting the user's current location.
+   */
   const handleCurrentLocation = () => {
     if (typeof window === "undefined" || !navigator.geolocation) {
       setErrorMessage("Geolocation is not supported by this browser");
@@ -340,18 +435,32 @@ export default function LocationPicker({
       return;
     }
 
+    /*
+     * Stop an existing GPS watch.
+     */
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
 
       watchIdRef.current = null;
     }
 
+    /*
+     * Reset GPS state for a new location request.
+     */
     bestGpsPositionRef.current = null;
+
+    reverseGeocodeStartedRef.current = false;
 
     setIsLocating(true);
     setErrorMessage("");
     setSearchResults([]);
 
+    /*
+     * Start watching GPS position.
+     *
+     * We use the first valid GPS reading and stop
+     * the watch immediately.
+     */
     watchIdRef.current = navigator.geolocation.watchPosition(
       handleGpsPosition,
       handleGpsError,

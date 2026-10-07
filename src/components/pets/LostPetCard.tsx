@@ -13,9 +13,7 @@ interface LostPetCardProps {
   report: LostPetReport;
 
   onViewDetails: (pet: Pet, report: LostPetReport) => void;
-
   onEdit: (pet: Pet, report: LostPetReport) => void;
-
   onDelete: (pet: Pet, report: LostPetReport) => void;
 }
 
@@ -33,6 +31,7 @@ export default function LostPetCard({
         borderColor: COLORS.grey[200],
       }}
     >
+      {/* Pet Image */}
       <div
         className="relative flex h-45 items-center justify-center"
         style={{
@@ -70,6 +69,7 @@ export default function LostPetCard({
           {localize.lost.status_lost}
         </div>
 
+        {/* Gender Icon */}
         <div className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm">
           {pet.gender === "Male" ? (
             <MaleIcon size={20} color={COLORS.primary.DEFAULT} />
@@ -79,32 +79,33 @@ export default function LostPetCard({
         </div>
       </div>
 
-      <div className="p-5">
-        <div className="mb-5 min-w-0">
+      {/* Pet Details */}
+      <div className="p-2">
+        {/* Pet Name & Species */}
+        <div className="mb-1">
           <h2
-            className="truncate text-lg font-semibold"
+            className="text-lg font-semibold"
             style={{
               color: COLORS.neutral.black,
             }}
-            title={pet.name}
           >
             {pet.name}
           </h2>
 
           <p
-            className="mt-1 truncate text-sm"
+            className="mt-0 text-sm"
             style={{
               color: COLORS.grey[600],
             }}
-            title={pet.species}
           >
             {pet.species}
           </p>
         </div>
 
-        <div className="mb-3 flex min-w-0 items-center justify-between gap-4">
+        {/* Last Seen Location */}
+        <div className="mb-1 flex items-center justify-between">
           <span
-            className="shrink-0 text-sm"
+            className="text-sm"
             style={{
               color: COLORS.grey[500],
             }}
@@ -113,7 +114,7 @@ export default function LostPetCard({
           </span>
 
           <span
-            className="min-w-0 truncate text-right text-sm font-medium"
+            className="max-w-[150px] truncate text-right text-sm font-medium"
             style={{
               color: COLORS.neutral.black,
             }}
@@ -123,9 +124,10 @@ export default function LostPetCard({
           </span>
         </div>
 
-        <div className="mb-3 flex items-center justify-between gap-4">
+        {/* Last Seen Date */}
+        <div className="mb-1 flex items-center justify-between">
           <span
-            className="shrink-0 text-sm"
+            className="text-sm"
             style={{
               color: COLORS.grey[500],
             }}
@@ -134,7 +136,7 @@ export default function LostPetCard({
           </span>
 
           <span
-            className="text-right text-sm font-medium"
+            className="text-sm font-medium"
             style={{
               color: COLORS.neutral.black,
             }}
@@ -143,9 +145,10 @@ export default function LostPetCard({
           </span>
         </div>
 
-        <div className="flex items-center justify-between gap-4">
+        {/* Last Seen Time */}
+        <div className="flex items-center justify-between">
           <span
-            className="shrink-0 text-sm"
+            className="text-sm"
             style={{
               color: COLORS.grey[500],
             }}
@@ -154,7 +157,7 @@ export default function LostPetCard({
           </span>
 
           <span
-            className="text-right text-sm font-medium"
+            className="text-sm font-medium"
             style={{
               color: COLORS.neutral.black,
             }}
@@ -163,8 +166,9 @@ export default function LostPetCard({
           </span>
         </div>
 
+        {/* Action Buttons */}
         <div
-          className="mt-5 grid grid-cols-3 gap-2 border-t pt-3"
+          className="mt-4 grid grid-cols-3 gap-3 border-t pt-3"
           style={{
             borderColor: COLORS.grey[200],
           }}
@@ -178,7 +182,7 @@ export default function LostPetCard({
               color: COLORS.neutral.black,
             }}
           >
-            {localize.common.view_details}
+            {localize.common.view_details}{" "}
           </button>
 
           <button
@@ -190,7 +194,7 @@ export default function LostPetCard({
               color: COLORS.neutral.black,
             }}
           >
-            {localize.common.edit}
+            {localize.common.edit}{" "}
           </button>
 
           <button
@@ -202,7 +206,7 @@ export default function LostPetCard({
               color: COLORS.status.red,
             }}
           >
-            {localize.common.delete}
+            {localize.common.delete}{" "}
           </button>
         </div>
       </div>
