@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import { PET_SPECIES } from "@/constants/petSpecies";
 import { COLORS } from "@/styles/colors";
 import { localize } from "@/utils/localize";
@@ -19,11 +20,32 @@ export default function PetSpeciesSelect({
 }: PetSpeciesSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const selectedLabel = value || localize.pets.all_species;
 
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
   return (
-    <div className={cn("relative w-full sm:w-48", className)}>
-      {" "}
+    <div
+      ref={containerRef}
+      className={cn("relative w-full sm:w-48", className)}
+    >
       <button
         type="button"
         onClick={() => setIsOpen((open) => !open)}
@@ -38,6 +60,7 @@ export default function PetSpeciesSelect({
 
         <span className="ml-2 text-xs">▼</span>
       </button>
+
       {isOpen && (
         <div
           className="absolute left-0 top-11 z-50 w-full overflow-hidden rounded-lg border shadow-md"
