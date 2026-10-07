@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-
+import PetSpeciesSelect from "@/components/ui/pet-species-select";
 import { usePetStore } from "@/store/petStore";
 import { useAuthStore } from "@/store/authStore";
 
@@ -25,6 +25,7 @@ export default function QRCodesPage() {
   const user = useAuthStore((state) => state.user);
 
   const [search, setSearch] = useState("");
+  const [selectedSpecies, setSelectedSpecies] = useState("");
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
 
   const filteredPets = useMemo(() => {
@@ -39,13 +40,15 @@ export default function QRCodesPage() {
         return false;
       }
 
-      if (!searchValue) {
-        return true;
-      }
+      const matchesSearch =
+        !searchValue || pet.name.toLowerCase().includes(searchValue);
 
-      return pet.name.toLowerCase().includes(searchValue);
+      const matchesSpecies =
+        !selectedSpecies || pet.species === selectedSpecies;
+
+      return matchesSearch && matchesSpecies;
     });
-  }, [pets, user, search]);
+  }, [pets, user, search, selectedSpecies]);
 
   const handleDownload = async (pet: Pet) => {
     await downloadQRCode(`qr-codes-${pet.id}`, pet.name);
@@ -65,9 +68,14 @@ export default function QRCodesPage() {
   };
 
   return (
-    <div className="min-h-full px-4 py-6 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
+    <div
+      className="flex h-full min-h-0 flex-col overflow-hidden px-8 pb-8 pt-2"
+      style={{
+        backgroundColor: COLORS.primary.background,
+      }}
+    >
+      <div className="mb-2 shrink-0">
+        <div>
           <h1
             className="text-2xl font-semibold"
             style={{
@@ -78,7 +86,7 @@ export default function QRCodesPage() {
           </h1>
 
           <p
-            className="mt-1 max-w-2xl text-sm"
+            className="mt-1 text-sm"
             style={{
               color: COLORS.grey[600],
             }}
@@ -87,13 +95,13 @@ export default function QRCodesPage() {
           </p>
         </div>
 
-        <div className="w-full md:w-72 md:shrink-0">
+        <div className="mt-3 flex w-full shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
           <input
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={localize.qr.search_placeholder}
-            className="w-full rounded-lg border px-4 py-2.5 text-sm outline-none transition focus:ring-2"
+            className="h-9 w-full rounded-lg border px-3 text-sm outline-none transition focus:ring-2 sm:w-64"
             style={
               {
                 borderColor: COLORS.grey[300],
@@ -103,11 +111,15 @@ export default function QRCodesPage() {
               } as React.CSSProperties
             }
           />
+          <PetSpeciesSelect
+            value={selectedSpecies}
+            onChange={setSelectedSpecies}
+          />
         </div>
       </div>
 
       {filteredPets.length > 0 ? (
-        <div className="mt-8 w-full overflow-x-auto pb-4">
+        <div className="qr-scroll mt-0 w-full overflow-x-auto pb-4">
           <div className="flex w-full gap-6">
             {filteredPets.map((pet) => {
               const qrData = {
@@ -172,7 +184,7 @@ export default function QRCodesPage() {
                     </div>
                   </div>
 
-                  <div className="mt-6 flex justify-center">
+                  <div className="mt-3 flex justify-center">
                     <div
                       className="rounded-xl border p-3"
                       style={{
@@ -183,7 +195,7 @@ export default function QRCodesPage() {
                       <QRCodeSVG
                         id={`qr-codes-${pet.id}`}
                         value={JSON.stringify(qrData)}
-                        size={240}
+                        size={200}
                         level="M"
                         bgColor={COLORS.neutral.white}
                         fgColor={COLORS.neutral.black}
@@ -241,7 +253,7 @@ export default function QRCodesPage() {
         </div>
       ) : (
         <div
-          className="mt-10 rounded-2xl border p-6 text-center sm:p-10"
+          className="rounded-xl border px-6 py-16 text-center sm:px-8 sm:py-36"
           style={{
             borderColor: COLORS.grey[200],
             backgroundColor: COLORS.neutral.white,
