@@ -360,6 +360,12 @@ export const localize = {
     no_notifications: "No notifications",
     mark_all_read: "Mark all as read",
     view_details: "View Details",
+
+    new: "New",
+    someone: "Someone",
+    view_recovery_details: "View recovery details",
+    recovery_confirmed_title: "Pet Recovery Confirmed",
+    recovery_confirmed_message: "{name} has been found. You can now contact the finder to arrange the safe return.",
   },
 
   recovery: {
@@ -367,6 +373,10 @@ export const localize = {
     subtitle:
       "Connect with the person involved in your pet's safe return.",
     recovery_confirmed: "Recovery Confirmed",
+    recovery_confirmed_title: "Pet Recovery Confirmed",
+    recovery_confirmed_message:
+    "The pet recovery has been confirmed successfully. You can view the recovery details to contact the person involved.",
+
     found_location: "Found Location",
     found_date: "Found Date",
     found_time: "Found Time",
@@ -374,9 +384,38 @@ export const localize = {
     pet_owner: "Pet Owner",
     contact_finder: "Contact Finder",
     contact_owner: "Contact Owner",
+    contact_information: "Contact Information",
+    email: "Email",
+    phone: "Phone",
+    call: "Call",
     message: "Message",
     found_pet_photo: "Found Pet Photo",
     no_recovery: "Recovery not found",
     access_denied: "Access denied",
+    name_not_available: "Name not available",
+    not_available: "Not available",
+
+    pet_found_message: "{name} has been found!",
+    pet_information: "Pet Information",
+    found_information: "Found Information",
+    date_found: "Date Found",
+    time_found: "Time Found",
+    nearby_landmark: "Nearby Landmark",
+    found_status: "Found",
+
+    name: "Name",
+    view_recovery_details: "View Recovery Details",
+    recovery_details: "Recovery Details",
+
+    owner_recovery_message:
+      "You can now contact the person who found {name}.",
+    finder_recovery_message:
+      "You can now contact the owner of {name} to arrange the safe return.",
+
+    recovery_contact_note:
+      "Contact information is available under View Recovery Details.",
+
+
+
   },
 };
