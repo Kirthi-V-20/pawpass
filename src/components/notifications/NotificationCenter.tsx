@@ -71,6 +71,10 @@ export default function NotificationCenter({
     string | null
   >(null);
 
+  const [selectedNotificationId, setSelectedNotificationId] = useState<
+    string | null
+  >(null);
+
   const [selectedRecoveryId, setSelectedRecoveryId] = useState<string | null>(
     null,
   );
@@ -80,7 +84,12 @@ export default function NotificationCenter({
   );
 
   useEffect(() => {
-    if (!open) {
+    if (
+      !open ||
+      selectedFoundReportId !== null ||
+      selectedRecoveryId !== null ||
+      recoveryDetailsId !== null
+    ) {
       return;
     }
 
@@ -98,7 +107,13 @@ export default function NotificationCenter({
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
-  }, [open, onClose]);
+  }, [
+    open,
+    onClose,
+    selectedFoundReportId,
+    selectedRecoveryId,
+    recoveryDetailsId,
+  ]);
 
   const visibleNotifications = useMemo(() => {
     if (!user) {
@@ -209,6 +224,10 @@ export default function NotificationCenter({
     event.stopPropagation();
 
     deleteNotification(notificationId);
+
+    if (selectedNotificationId === notificationId) {
+      setSelectedNotificationId(null);
+    }
   };
 
   const handleDeleteAllNotifications = () => {
@@ -249,6 +268,9 @@ export default function NotificationCenter({
 
       setSelectedRecoveryId(null);
       setRecoveryDetailsId(null);
+
+      setSelectedNotificationId(notification.id);
+
       setSelectedFoundReportId(foundReport.id);
 
       return;
@@ -272,8 +294,11 @@ export default function NotificationCenter({
       }
 
       setSelectedFoundReportId(null);
-      setRecoveryDetailsId(null);
-      setSelectedRecoveryId(recovery.id);
+      setSelectedNotificationId(null);
+
+      setSelectedRecoveryId(null);
+
+      setRecoveryDetailsId(recovery.id);
 
       return;
     }
@@ -296,8 +321,12 @@ export default function NotificationCenter({
       }
 
       setSelectedFoundReportId(null);
+      setSelectedNotificationId(null);
       setRecoveryDetailsId(null);
+
       setSelectedRecoveryId(recovery.id);
+
+      return;
     }
   };
 
@@ -419,8 +448,14 @@ export default function NotificationCenter({
       createdAt: new Date().toISOString(),
     });
 
-    setSelectedFoundReportId(null);
+    if (selectedNotificationId) {
+      deleteNotification(selectedNotificationId);
 
+      setSelectedNotificationId(null);
+    }
+
+    setSelectedFoundReportId(null);
+    setRecoveryDetailsId(null);
     setSelectedRecoveryId(recoveryId);
   };
 
@@ -458,11 +493,18 @@ export default function NotificationCenter({
       createdAt: new Date().toISOString(),
     });
 
+    if (selectedNotificationId) {
+      deleteNotification(selectedNotificationId);
+
+      setSelectedNotificationId(null);
+    }
+
     setSelectedFoundReportId(null);
   };
 
   const handleCloseFoundReportModal = () => {
     setSelectedFoundReportId(null);
+    setSelectedNotificationId(null);
   };
 
   const handleCloseRecoveryModal = () => {

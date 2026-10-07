@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { Modal } from "@/components/ui/modal";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import { Modal } from "@/components/ui/modal";
 
 import type { FoundPetReport } from "@/types/foundPet";
 import type { LostPetReport } from "@/types/lostPet";
@@ -168,6 +168,42 @@ export default function FoundReportDetailsModal({
     }
   };
 
+  const getStatusLabel = () => {
+    if (foundReport.status === "MATCH_CONFIRMED") {
+      return localize.found.confirmed;
+    }
+
+    if (foundReport.status === "REJECTED") {
+      return localize.found.dismissed;
+    }
+
+    return localize.found.pending;
+  };
+
+  const getStatusBackgroundColor = () => {
+    if (foundReport.status === "MATCH_CONFIRMED") {
+      return COLORS.status.greenLight;
+    }
+
+    if (foundReport.status === "REJECTED") {
+      return COLORS.status.redLight;
+    }
+
+    return COLORS.status.yellowLight;
+  };
+
+  const getStatusColor = () => {
+    if (foundReport.status === "MATCH_CONFIRMED") {
+      return COLORS.status.green;
+    }
+
+    if (foundReport.status === "REJECTED") {
+      return COLORS.status.red;
+    }
+
+    return COLORS.status.yellow;
+  };
+
   return (
     <>
       <Modal
@@ -230,18 +266,12 @@ export default function FoundReportDetailsModal({
           )
         }
       >
-        <div className="space-y-6">
-          <div
-            className="rounded-lg border p-4"
-            style={{
-              borderColor: COLORS.primary.light,
-              backgroundColor: COLORS.primary.background,
-            }}
-          >
+        <div className="space-y-7">
+          <div>
             <p
               className="text-sm leading-6"
               style={{
-                color: COLORS.grey[700],
+                color: COLORS.grey[600],
               }}
             >
               {localize.found.possible_match_message.replace(
@@ -251,158 +281,141 @@ export default function FoundReportDetailsModal({
             </p>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div>
-              <h3
-                className="mb-2 text-sm font-semibold"
-                style={{
-                  color: COLORS.neutral.black,
-                }}
-              >
-                {localize.found.lost_pet_photo}
-              </h3>
+          <section>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <p
+                  className="mb-2 text-sm font-medium"
+                  style={{
+                    color: COLORS.grey[700],
+                  }}
+                >
+                  {localize.found.lost_pet_photo}
+                </p>
 
-              <div
-                className="flex h-56 items-center justify-center overflow-hidden rounded-xl border"
-                style={{
-                  borderColor: COLORS.grey[200],
-                  backgroundColor: COLORS.grey[50],
-                }}
-              >
-                {pet.photo || lostReport.photo ? (
-                  <img
-                    src={pet.photo ?? lostReport.photo}
-                    alt={pet.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span
-                    className="text-sm"
-                    style={{
-                      color: COLORS.grey[400],
-                    }}
-                  >
-                    {localize.lost.no_photo}
-                  </span>
-                )}
+                <div
+                  className="flex h-56 items-center justify-center overflow-hidden rounded-xl"
+                  style={{
+                    backgroundColor: COLORS.grey[50],
+                  }}
+                >
+                  {pet.photo || lostReport.photo ? (
+                    <img
+                      src={pet.photo ?? lostReport.photo}
+                      alt={pet.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span
+                      className="text-sm"
+                      style={{
+                        color: COLORS.grey[400],
+                      }}
+                    >
+                      {localize.lost.no_photo}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p
+                  className="mb-2 text-sm font-medium"
+                  style={{
+                    color: COLORS.grey[700],
+                  }}
+                >
+                  {localize.found.found_photo}
+                </p>
+
+                <div
+                  className="flex h-56 items-center justify-center overflow-hidden rounded-xl"
+                  style={{
+                    backgroundColor: COLORS.grey[50],
+                  }}
+                >
+                  {foundPhoto ? (
+                    <img
+                      src={foundPhoto}
+                      alt={localize.found.found_photo}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span
+                      className="text-sm"
+                      style={{
+                        color: COLORS.grey[400],
+                      }}
+                    >
+                      {localize.lost.no_photo}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
+          </section>
 
-            <div>
-              <h3
-                className="mb-2 text-sm font-semibold"
-                style={{
-                  color: COLORS.neutral.black,
-                }}
-              >
-                {localize.found.found_photo}
-              </h3>
+          <section>
+            <SectionTitle>{localize.found.pet_information}</SectionTitle>
 
-              <div
-                className="flex h-56 items-center justify-center overflow-hidden rounded-xl border"
-                style={{
-                  borderColor: COLORS.grey[200],
-                  backgroundColor: COLORS.grey[50],
-                }}
-              >
-                {foundPhoto ? (
-                  <img
-                    src={foundPhoto}
-                    alt={localize.found.found_photo}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span
-                    className="text-sm"
-                    style={{
-                      color: COLORS.grey[400],
-                    }}
-                  >
-                    {localize.lost.no_photo}
-                  </span>
-                )}
-              </div>
+            <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+              <InfoRow label="Name" value={pet.name} />
+
+              <InfoRow label="Species" value={pet.species} />
+
+              <InfoRow label={localize.found.gender} value={pet.gender} />
+
+              <InfoRow label={localize.found.age} value={getPetAge()} />
             </div>
-          </div>
+          </section>
 
-          <div>
-            <h3
-              className="mb-3 text-sm font-semibold"
-              style={{
-                color: COLORS.neutral.black,
-              }}
-            >
-              {localize.found.pet_information}
-            </h3>
+          <section>
+            <SectionTitle>{localize.found.found_information}</SectionTitle>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <InfoItem label="Name" value={pet.name} />
-
-              <InfoItem label="Species" value={pet.species} />
-
-              <InfoItem label={localize.found.gender} value={pet.gender} />
-
-              <InfoItem label={localize.found.age} value={getPetAge()} />
-            </div>
-          </div>
-
-          <div>
-            <h3
-              className="mb-3 text-sm font-semibold"
-              style={{
-                color: COLORS.neutral.black,
-              }}
-            >
-              {localize.found.found_information}
-            </h3>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <InfoItem
+            <div className="space-y-5">
+              <InfoRow
                 label={localize.found.found_loc}
                 value={foundReport.foundLocation}
               />
 
-              <InfoItem
-                label={localize.found.last_seen_date}
-                value={formatDate(foundReport.foundDate)}
-              />
+              <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                <InfoRow
+                  label={localize.found.last_seen_date}
+                  value={formatDate(foundReport.foundDate)}
+                />
 
-              {foundReport.foundTime && (
-                <InfoItem label="Time" value={foundReport.foundTime} />
-              )}
+                {foundReport.foundTime && (
+                  <InfoRow label="Time" value={foundReport.foundTime} />
+                )}
+              </div>
 
               {foundReport.nearbyLandmark && (
-                <InfoItem
+                <InfoRow
                   label={localize.lost.landmark}
                   value={foundReport.nearbyLandmark}
                 />
               )}
-            </div>
 
-            {foundReport.description && (
-              <div className="mt-3">
-                <InfoItem
+              {foundReport.description && (
+                <InfoRow
                   label={localize.found.description}
                   value={foundReport.description}
                 />
-              </div>
-            )}
+              )}
 
-            {foundReport.additionalDetails && (
-              <div className="mt-3">
-                <InfoItem
+              {foundReport.additionalDetails && (
+                <InfoRow
                   label={localize.found.additional_details}
                   value={foundReport.additionalDetails}
                 />
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </section>
 
           <div
-            className="flex items-center justify-between rounded-lg border px-4 py-3"
+            className="flex items-center justify-between border-t pt-5"
             style={{
               borderColor: COLORS.grey[200],
-              backgroundColor: COLORS.grey[50],
             }}
           >
             <span
@@ -417,26 +430,11 @@ export default function FoundReportDetailsModal({
             <span
               className="rounded-full px-3 py-1 text-xs font-semibold"
               style={{
-                backgroundColor:
-                  foundReport.status === "MATCH_CONFIRMED"
-                    ? COLORS.status.greenLight
-                    : foundReport.status === "REJECTED"
-                      ? COLORS.status.redLight
-                      : COLORS.status.yellowLight,
-
-                color:
-                  foundReport.status === "MATCH_CONFIRMED"
-                    ? COLORS.status.green
-                    : foundReport.status === "REJECTED"
-                      ? COLORS.status.red
-                      : COLORS.status.yellow,
+                backgroundColor: getStatusBackgroundColor(),
+                color: getStatusColor(),
               }}
             >
-              {foundReport.status === "MATCH_CONFIRMED"
-                ? localize.found.confirmed
-                : foundReport.status === "REJECTED"
-                  ? localize.found.dismissed
-                  : localize.found.pending}
+              {getStatusLabel()}
             </span>
           </div>
         </div>
@@ -472,20 +470,31 @@ export default function FoundReportDetailsModal({
   );
 }
 
-interface InfoItemProps {
+interface SectionTitleProps {
+  children: React.ReactNode;
+}
+
+function SectionTitle({ children }: SectionTitleProps) {
+  return (
+    <h3
+      className="mb-4 text-sm font-semibold"
+      style={{
+        color: COLORS.neutral.black,
+      }}
+    >
+      {children}
+    </h3>
+  );
+}
+
+interface InfoRowProps {
   label: string;
   value: string | number;
 }
 
-function InfoItem({ label, value }: InfoItemProps) {
+function InfoRow({ label, value }: InfoRowProps) {
   return (
-    <div
-      className="rounded-lg border px-4 py-3"
-      style={{
-        borderColor: COLORS.grey[200],
-        backgroundColor: COLORS.grey[50],
-      }}
-    >
+    <div>
       <p
         className="text-xs"
         style={{
@@ -496,7 +505,7 @@ function InfoItem({ label, value }: InfoItemProps) {
       </p>
 
       <p
-        className="mt-1 break-words text-sm font-medium"
+        className="mt-1 break-words text-sm font-medium leading-6"
         style={{
           color: COLORS.neutral.black,
         }}
