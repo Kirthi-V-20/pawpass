@@ -366,6 +366,8 @@ export const localize = {
     view_recovery_details: "View recovery details",
     recovery_confirmed_title: "Pet Recovery Confirmed",
     recovery_confirmed_message: "{name} has been found. You can now contact the finder to arrange the safe return.",
+    delete: "Delete",
+    delete_all: "Delete All",
   },
 
   recovery: {

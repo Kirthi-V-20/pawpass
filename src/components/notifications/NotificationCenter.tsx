@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import FoundReportDetailsModal from "@/components/modals/FoundReportDetailsModal";
 import RecoveryConfirmedModal from "@/components/modals/RecoveryConfirmedModal";
 import RecoveryDetailsModal from "@/components/modals/RecoveryDetailsModal";
-import FoundReportDetailsModal from "@/components/modals/FoundReportDetailsModal";
 
 import { useAuthStore } from "@/store/authStore";
 import { useFoundPetStore } from "@/store/foundPetStore";
@@ -14,6 +14,7 @@ import { usePetStore } from "@/store/petStore";
 import { useProfileStore } from "@/store/profileStore";
 import { useRecoveryStore } from "@/store/recoveryStore";
 
+import DeleteIcon from "@/icons/DeleteIcon";
 import { COLORS } from "@/styles/colors";
 import { localize } from "@/utils/localize";
 
@@ -28,6 +29,8 @@ export default function NotificationCenter({
   open,
   onClose,
 }: NotificationCenterProps) {
+  const notificationRef = useRef<HTMLDivElement>(null);
+
   const user = useAuthStore((state) => state.user);
 
   const notifications = useNotificationStore((state) => state.notifications);
@@ -37,6 +40,14 @@ export default function NotificationCenter({
   );
 
   const markAsRead = useNotificationStore((state) => state.markAsRead);
+
+  const deleteNotification = useNotificationStore(
+    (state) => state.deleteNotification,
+  );
+
+  const clearNotifications = useNotificationStore(
+    (state) => state.clearNotifications,
+  );
 
   const foundPets = useFoundPetStore((state) => state.foundPets);
 
@@ -67,6 +78,27 @@ export default function NotificationCenter({
   const [recoveryDetailsId, setRecoveryDetailsId] = useState<string | null>(
     null,
   );
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [open, onClose]);
 
   const visibleNotifications = useMemo(() => {
     if (!user) {
@@ -132,14 +164,14 @@ export default function NotificationCenter({
   }, [recoveries, recoveryDetailsId]);
 
   const selectedRecoveryFoundReport = useMemo(() => {
-    const recovery = selectedRecovery;
-
-    if (!recovery) {
+    if (!selectedRecovery) {
       return null;
     }
 
     return (
-      foundPets.find((report) => report.id === recovery.foundReportId) ?? null
+      foundPets.find(
+        (report) => report.id === selectedRecovery.foundReportId,
+      ) ?? null
     );
   }, [foundPets, selectedRecovery]);
 
@@ -169,6 +201,23 @@ export default function NotificationCenter({
 
     return pets.find((pet) => pet.id === recoveryDetails.petId) ?? null;
   }, [pets, recoveryDetails]);
+
+  const handleDeleteNotification = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    notificationId: string,
+  ) => {
+    event.stopPropagation();
+
+    deleteNotification(notificationId);
+  };
+
+  const handleDeleteAllNotifications = () => {
+    if (!user) {
+      return;
+    }
+
+    clearNotifications(user.id);
+  };
 
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
@@ -293,11 +342,15 @@ export default function NotificationCenter({
       finderId: selectedFoundReport.finderId,
 
       ownerName,
+
       ownerEmail,
+
       ownerPhone,
 
       finderName,
+
       finderEmail,
+
       finderPhone,
 
       foundLocation: selectedFoundReport.foundLocation,
@@ -353,13 +406,11 @@ export default function NotificationCenter({
 
       type: "RECOVERY_CONFIRMED",
 
-      title: "Pet Recovery Confirmed",
+      title: localize.notification.recovery_confirmed_title,
 
-      message:
-        `${finderName || "Someone"} found ` +
-        `${selectedPet.name}. ` +
-        `You can now contact the finder ` +
-        `to arrange the safe return.`,
+      message: localize.notification.recovery_confirmed_message
+        .replace("{finder}", finderName || localize.notification.someone)
+        .replace("{name}", selectedPet.name),
 
       relatedId: recoveryId,
 
@@ -439,6 +490,7 @@ export default function NotificationCenter({
   return (
     <>
       <div
+        ref={notificationRef}
         className="absolute right-0 top-12 z-50 w-[360px] overflow-hidden rounded-xl border shadow-lg"
         style={{
           borderColor: COLORS.grey[200],
@@ -460,19 +512,34 @@ export default function NotificationCenter({
             {localize.notification.title}
           </h3>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-xs font-medium"
-            style={{
-              color: COLORS.grey[500],
-            }}
-          >
-            {localize.common.close}
-          </button>
+          <div className="flex items-center gap-3">
+            {visibleNotifications.length > 0 && (
+              <button
+                type="button"
+                onClick={handleDeleteAllNotifications}
+                className="text-xs font-medium transition-opacity hover:opacity-70"
+                style={{
+                  color: COLORS.status.red,
+                }}
+              >
+                {localize.notification.delete_all}
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-xs font-medium"
+              style={{
+                color: COLORS.grey[500],
+              }}
+            >
+              {localize.common.close}
+            </button>
+          </div>
         </div>
 
-        <div className="max-h-[420px] overflow-y-auto">
+        <div className="max-h-[350px] overflow-y-auto">
           {visibleNotifications.length === 0 ? (
             <div className="px-4 py-10 text-center">
               <p
@@ -495,11 +562,19 @@ export default function NotificationCenter({
                 notification.type === "RECOVERY_CONFIRMED";
 
               return (
-                <button
+                <div
                   key={notification.id}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleNotificationClick(notification)}
-                  className="block w-full border-b px-4 py-4 text-left transition-colors hover:bg-slate-50"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+
+                      handleNotificationClick(notification);
+                    }
+                  }}
+                  className="cursor-pointer border-b px-4 py-4 text-left transition-colors hover:bg-slate-50"
                   style={{
                     borderColor: COLORS.grey[100],
 
@@ -529,16 +604,33 @@ export default function NotificationCenter({
                           {notification.title}
                         </p>
 
-                        {!notification.isRead && (
-                          <span
-                            className="shrink-0 text-[10px] font-medium"
+                        <div className="flex shrink-0 items-center gap-2">
+                          {!notification.isRead && (
+                            <span
+                              className="text-[10px] font-medium"
+                              style={{
+                                color: COLORS.primary.DEFAULT,
+                              }}
+                            >
+                              {localize.notification.new}
+                            </span>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={(event) =>
+                              handleDeleteNotification(event, notification.id)
+                            }
+                            className="rounded-md p-1.5 transition-colors hover:bg-slate-100"
                             style={{
-                              color: COLORS.primary.DEFAULT,
+                              color: COLORS.grey[500],
                             }}
+                            aria-label={localize.notification.delete}
+                            title={localize.notification.delete}
                           >
-                            New
-                          </span>
-                        )}
+                            <DeleteIcon size={15} strokeWidth={1.8} />
+                          </button>
+                        </div>
                       </div>
 
                       <p
@@ -568,7 +660,7 @@ export default function NotificationCenter({
                             color: COLORS.status.green,
                           }}
                         >
-                          View recovery details
+                          {localize.notification.view_recovery_details}
                         </p>
                       )}
 
@@ -582,7 +674,7 @@ export default function NotificationCenter({
                       </p>
                     </div>
                   </div>
-                </button>
+                </div>
               );
             })
           )}
