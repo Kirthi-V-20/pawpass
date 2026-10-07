@@ -21,6 +21,7 @@ export const localize = {
     pet_image_alt: "PawPass pets",
     menu: "Menu",
     notifications: "Notifications",    
+    toggle_sidebar: "Toggle sidebar",
   },
 
   auth: {
@@ -213,7 +214,7 @@ export const localize = {
     last_seen_time: "Time",
     view_details: "View Details",
     no_lost_pets: "No lost pets found.",
-
+    no_lost_pets_description: "You don't have any lost pets at the moment.",
     modal_title: "Report Lost Pet",
 
     select_pet: "Select Pet",
@@ -328,5 +329,54 @@ export const localize = {
     enter_email: "Enter your email",
     enter_phone: "Enter your phone number",
     profile_updated: "Profile updated successfully",
-  }
+  },
+
+  notification: {
+    title: "Notifications",
+    possible_match_title: "Possible Match Found",
+    possible_match_message:
+      "Someone reported finding a pet that may be {name}.",
+
+    match_confirmed_title: "Pet Owner Confirmed the Match",
+    match_confirmed_message:
+      "The owner has confirmed that {name} is their pet. You can now contact the owner to arrange the safe return.",
+
+    match_rejected_title: "Update on Your Found-Pet Report",
+    match_rejected_message:
+      "The owner has confirmed that the pet you reported is not {name}. Thank you for helping.",
+
+    confirm_match_title: "Confirm This Is Your Pet?",
+    confirm_match_message:
+      "Are you sure this is {name}? This will mark the pet as found and resolve the lost report.",
+
+    reject_match_title: "Confirm This Is Not Your Pet?",
+    reject_match_message:
+      "Are you sure this is not {name}? The lost report will remain active.",
+
+    yes_mark_found: "Yes, Mark as Found",
+    not_my_pet: "Not My Pet",
+    this_is_my_pet: "This Is My Pet",
+
+    no_notifications: "No notifications",
+    mark_all_read: "Mark all as read",
+    view_details: "View Details",
+  },
+
+  recovery: {
+    title: "Pet Recovery",
+    subtitle:
+      "Connect with the person involved in your pet's safe return.",
+    recovery_confirmed: "Recovery Confirmed",
+    found_location: "Found Location",
+    found_date: "Found Date",
+    found_time: "Found Time",
+    found_by: "Found By",
+    pet_owner: "Pet Owner",
+    contact_finder: "Contact Finder",
+    contact_owner: "Contact Owner",
+    message: "Message",
+    found_pet_photo: "Found Pet Photo",
+    no_recovery: "Recovery not found",
+    access_denied: "Access denied",
+  },
 };
