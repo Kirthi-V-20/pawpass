@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import AddVaccinationModal from "@/components/modals/AddVaccinationModal";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
@@ -18,6 +19,256 @@ interface VaccinationSectionProps {
   petId: string;
 }
 
+interface VaccinationActionMenuProps {
+  vaccination: Vaccination;
+  onEdit: (vaccination: Vaccination) => void;
+  onMarkAsGiven: (vaccination: Vaccination) => void;
+  onDelete: (vaccination: Vaccination) => void;
+}
+
+function VaccinationActionMenu({
+  vaccination,
+  onEdit,
+  onMarkAsGiven,
+  onDelete,
+}: VaccinationActionMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [position, setPosition] = useState({
+    top: 0,
+    left: 0,
+  });
+
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const updatePosition = () => {
+    if (!buttonRef.current) {
+      return;
+    }
+
+    const rect = buttonRef.current.getBoundingClientRect();
+
+    const menuWidth = window.innerWidth < 640 ? 136 : 144;
+
+    const menuHeight = 132;
+
+    const screenPadding = 8;
+    const menuSpacing = 6;
+
+    let top = rect.bottom + menuSpacing;
+
+    let left = rect.right - menuWidth;
+
+    if (left < screenPadding) {
+      left = screenPadding;
+    }
+
+    if (left + menuWidth > window.innerWidth - screenPadding) {
+      left = window.innerWidth - menuWidth - screenPadding;
+    }
+
+    if (top + menuHeight > window.innerHeight - screenPadding) {
+      top = rect.top - menuHeight - menuSpacing;
+    }
+
+    if (top < screenPadding) {
+      top = screenPadding;
+    }
+
+    setPosition({
+      top,
+      left,
+    });
+  };
+
+  const handleToggle = () => {
+    if (!isOpen) {
+      updatePosition();
+    }
+
+    setIsOpen((current) => !current);
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      const menuElement = document.getElementById(
+        `vaccination-action-menu-${vaccination.id}`,
+      );
+
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(target) &&
+        menuElement &&
+        !menuElement.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleScroll = () => {
+      updatePosition();
+    };
+
+    const handleResize = () => {
+      updatePosition();
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    window.addEventListener("scroll", handleScroll, true);
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+
+      window.removeEventListener("scroll", handleScroll, true);
+
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [isOpen, vaccination.id]);
+
+  const handleEdit = () => {
+    setIsOpen(false);
+    onEdit(vaccination);
+  };
+
+  const handleMarkAsGiven = () => {
+    setIsOpen(false);
+    onMarkAsGiven(vaccination);
+  };
+
+  const handleDelete = () => {
+    setIsOpen(false);
+    onDelete(vaccination);
+  };
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={handleToggle}
+        aria-label={`${vaccination.vaccineName} actions`}
+        aria-expanded={isOpen}
+        className="
+          flex
+          h-9
+          w-9
+          items-center
+          justify-center
+          rounded-md
+          text-lg
+          font-semibold
+          transition-colors
+          hover:bg-slate-100
+          active:bg-slate-200
+        "
+        style={{
+          color: COLORS.grey[600],
+        }}
+      >
+        ⋮
+      </button>
+
+      {isOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            id={`vaccination-action-menu-${vaccination.id}`}
+            className="
+              fixed
+              z-[9999]
+              w-[136px]
+              overflow-hidden
+              rounded-md
+              border
+              bg-white
+              py-1
+              shadow-lg
+              sm:w-36
+            "
+            style={{
+              top: `${position.top}px`,
+              left: `${position.left}px`,
+              borderColor: COLORS.grey[200],
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleEdit}
+              className="
+                block
+                min-h-10
+                w-full
+                px-4
+                py-2
+                text-left
+                text-sm
+                hover:bg-slate-50
+                active:bg-slate-100
+              "
+              style={{
+                color: COLORS.grey[700],
+              }}
+            >
+              {localize.health.edit}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleMarkAsGiven}
+              className="
+                block
+                min-h-10
+                w-full
+                px-4
+                py-2
+                text-left
+                text-sm
+                hover:bg-slate-50
+                active:bg-slate-100
+              "
+              style={{
+                color: COLORS.status.green,
+              }}
+            >
+              {localize.health.mark_as_given}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="
+                block
+                min-h-10
+                w-full
+                px-4
+                py-2
+                text-left
+                text-sm
+                hover:bg-slate-50
+                active:bg-slate-100
+              "
+              style={{
+                color: COLORS.status.red,
+              }}
+            >
+              {localize.health.delete}
+            </button>
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
 export default function VaccinationSection({ petId }: VaccinationSectionProps) {
   const { vaccinations, deleteVaccination, markVaccinationAsGiven } =
     useHealthStore();
@@ -29,9 +280,8 @@ export default function VaccinationSection({ petId }: VaccinationSectionProps) {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const petVaccinations = useMemo(
-    () => vaccinations.filter((vaccination) => vaccination.petId === petId),
-    [vaccinations, petId],
+  const petVaccinations = vaccinations.filter(
+    (vaccination) => vaccination.petId === petId,
   );
 
   const getStatusLabel = (status: Vaccination["status"]) => {
@@ -101,7 +351,6 @@ export default function VaccinationSection({ petId }: VaccinationSectionProps) {
   };
 
   const handleMarkAsGiven = (vaccination: Vaccination) => {
-    console.log("MARK AS GIVEN:", vaccination);
     markVaccinationAsGiven(vaccination.id);
   };
 
@@ -135,6 +384,7 @@ export default function VaccinationSection({ petId }: VaccinationSectionProps) {
     {
       key: "vaccineName",
       label: localize.health.vaccine_name,
+
       render: (vaccination: Vaccination) => (
         <span
           className="font-medium"
@@ -150,24 +400,35 @@ export default function VaccinationSection({ petId }: VaccinationSectionProps) {
     {
       key: "givenDate",
       label: localize.health.given_date,
+
       render: (vaccination: Vaccination) => formatDate(vaccination.givenDate),
     },
 
     {
       key: "nextDueDate",
       label: localize.health.next_due,
+
       render: (vaccination: Vaccination) => formatDate(vaccination.nextDueDate),
     },
 
     {
       key: "status",
       label: localize.health.status,
+
       render: (vaccination: Vaccination) => {
         const status = getVaccinationStatus(vaccination);
 
         return (
           <span
-            className="inline-flex rounded-full px-2.5 py-1 text-xs font-medium"
+            className="
+              inline-flex
+              whitespace-nowrap
+              rounded-full
+              px-2.5
+              py-1
+              text-xs
+              font-medium
+            "
             style={getStatusStyle(status)}
           >
             {getStatusLabel(status)}
@@ -181,61 +442,12 @@ export default function VaccinationSection({ petId }: VaccinationSectionProps) {
       label: localize.health.actions,
 
       render: (vaccination: Vaccination) => (
-        <div className="relative">
-          <details className="group">
-            <summary
-              className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-md text-lg font-semibold transition-colors hover:bg-slate-100"
-              style={{
-                color: COLORS.grey[600],
-              }}
-            >
-              ⋮
-            </summary>
-
-            <div className="absolute right-0 z-20 mt-1 w-36 rounded-md border bg-white py-1 shadow-lg">
-              <button
-                type="button"
-                onClick={() => handleEditVaccination(vaccination)}
-                className="block w-full px-4 py-2 text-left text-sm hover:bg-slate-50"
-                style={{
-                  color: COLORS.grey[700],
-                }}
-              >
-                {localize.health.edit}
-              </button>
-
-              <button
-                type="button"
-                onClick={(event) => {
-                  handleMarkAsGiven(vaccination);
-
-                  const details = event.currentTarget.closest("details");
-
-                  if (details) {
-                    details.open = false;
-                  }
-                }}
-                className="block w-full px-4 py-2 text-left text-sm hover:bg-slate-50"
-                style={{
-                  color: COLORS.status.green,
-                }}
-              >
-                {localize.health.mark_as_given}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDeleteClick(vaccination)}
-                className="block w-full px-4 py-2 text-left text-sm hover:bg-slate-50"
-                style={{
-                  color: COLORS.status.red,
-                }}
-              >
-                {localize.health.delete}
-              </button>
-            </div>
-          </details>
-        </div>
+        <VaccinationActionMenu
+          vaccination={vaccination}
+          onEdit={handleEditVaccination}
+          onMarkAsGiven={handleMarkAsGiven}
+          onDelete={handleDeleteClick}
+        />
       ),
     },
   ];
@@ -248,8 +460,21 @@ export default function VaccinationSection({ petId }: VaccinationSectionProps) {
           borderColor: COLORS.grey[200],
         }}
       >
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <div>
+        <div
+          className="
+            flex
+            flex-col
+            gap-3
+            border-b
+            px-4
+            py-4
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
+            sm:px-6
+          "
+        >
+          <div className="min-w-0">
             <h2
               className="text-lg font-semibold"
               style={{
@@ -272,7 +497,18 @@ export default function VaccinationSection({ petId }: VaccinationSectionProps) {
           <button
             type="button"
             onClick={handleAddVaccination}
-            className="rounded-md px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+            className="
+              w-full
+              rounded-md
+              px-4
+              py-2
+              text-sm
+              font-medium
+              text-white
+              transition-opacity
+              hover:opacity-90
+              sm:w-auto
+            "
             style={{
               backgroundColor: COLORS.primary.DEFAULT,
             }}

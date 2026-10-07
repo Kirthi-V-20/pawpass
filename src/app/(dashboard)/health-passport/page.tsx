@@ -19,6 +19,7 @@ export default function HealthPassportPage() {
   const user = useAuthStore((state) => state.user);
 
   const pets = usePetStore((state) => state.pets);
+
   const [selectedPetId, setSelectedPetId] = useState("");
 
   const [activeTab, setActiveTab] = useState<HealthTab>("vaccinations");
@@ -69,12 +70,12 @@ export default function HealthPassportPage() {
   return (
     <>
       <div
-        className="flex h-full min-h-0 flex-col p-6"
+        className="flex h-full min-h-0 flex-col overflow-hidden px-8 pb-8 pt-2"
         style={{
           backgroundColor: COLORS.primary.background,
         }}
       >
-        <div className="mb-6 shrink-0">
+        <div className="mb-2 shrink-0">
           <h1
             className="text-2xl font-semibold"
             style={{
@@ -103,84 +104,53 @@ export default function HealthPassportPage() {
         >
           <div className="mx-auto w-full max-w-6xl pb-6">
             <div
-              className="mb-6 rounded-lg border bg-white p-5"
+              className="mb-4 rounded-lg border bg-white p-5"
               style={{
                 borderColor: COLORS.grey[200],
               }}
             >
-              <label
-                htmlFor="health-pet"
-                className="mb-2 block text-sm font-medium"
-                style={{
-                  color: COLORS.grey[700],
-                }}
-              >
-                {localize.health.select_pet}
-              </label>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:items-center">
+                <div>
+                  <label
+                    htmlFor="health-pet"
+                    className="mb-2 block text-sm font-medium"
+                    style={{
+                      color: COLORS.grey[700],
+                    }}
+                  >
+                    {localize.health.select_pet}
+                  </label>
 
-              <select
-                id="health-pet"
-                value={selectedPetId}
-                onChange={(event) => {
-                  setSelectedPetId(event.target.value);
-                  setActiveTab("vaccinations");
-                }}
-                className="h-10 w-full max-w-sm rounded-md border bg-white px-3 text-sm outline-none"
-                style={{
-                  borderColor: COLORS.grey[300],
-                  color: COLORS.neutral.black,
-                }}
-              >
-                <option value="">
-                  {localize.health.select_pet_placeholder}
-                </option>
+                  <select
+                    id="health-pet"
+                    value={selectedPetId}
+                    onChange={(event) => {
+                      setSelectedPetId(event.target.value);
 
-                {userPets.map((pet) => (
-                  <option key={pet.id} value={pet.id}>
-                    {pet.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                      setActiveTab("vaccinations");
+                    }}
+                    className="h-10 w-full  rounded-md border bg-white px-3 pr-10 text-sm outline-none "
+                    style={{
+                      borderColor: COLORS.grey[300],
+                      color: COLORS.neutral.black,
+                    }}
+                  >
+                    <option value="">
+                      {localize.health.select_pet_placeholder}
+                    </option>
 
-            {!selectedPet && (
-              <div
-                className="rounded-lg border bg-white px-6 py-16 text-center"
-                style={{
-                  borderColor: COLORS.grey[200],
-                }}
-              >
-                <h2
-                  className="text-lg font-semibold"
-                  style={{
-                    color: COLORS.neutral.black,
-                  }}
-                >
-                  {localize.health.select_pet_title}
-                </h2>
+                    {userPets.map((pet) => (
+                      <option key={pet.id} value={pet.id}>
+                        {pet.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <p
-                  className="mt-2 text-sm"
-                  style={{
-                    color: COLORS.grey[500],
-                  }}
-                >
-                  {localize.health.select_pet_description}
-                </p>
-              </div>
-            )}
-
-            {selectedPet && (
-              <>
-                <div
-                  className="mb-6 rounded-lg border bg-white p-6"
-                  style={{
-                    borderColor: COLORS.grey[200],
-                  }}
-                >
-                  <div className="flex items-center gap-5">
+                {selectedPet && (
+                  <div className="flex min-w-0 items-center gap-4">
                     <div
-                      className="h-20 w-20 shrink-0 overflow-hidden rounded-full"
+                      className="h-16 w-16 shrink-0 overflow-hidden rounded-full"
                       style={{
                         backgroundColor: COLORS.grey[100],
                       }}
@@ -194,7 +164,7 @@ export default function HealthPassportPage() {
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
                           <span
-                            className="text-2xl font-semibold"
+                            className="text-xl font-semibold"
                             style={{
                               color: COLORS.primary.DEFAULT,
                             }}
@@ -205,10 +175,10 @@ export default function HealthPassportPage() {
                       )}
                     </div>
 
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <h2
-                          className="text-xl font-semibold"
+                          className="truncate text-lg font-semibold"
                           style={{
                             color: COLORS.neutral.black,
                           }}
@@ -236,7 +206,7 @@ export default function HealthPassportPage() {
                       </p>
 
                       <div
-                        className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm"
+                        className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm"
                         style={{
                           color: COLORS.grey[600],
                         }}
@@ -251,10 +221,42 @@ export default function HealthPassportPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
+              </div>
+            </div>
 
+            {!selectedPet && (
+              <div
+                className="flex min-h-[320px] flex-col items-center justify-center rounded-xl border px-6 text-center"
+                style={{
+                  borderColor: COLORS.grey[200],
+                  backgroundColor: COLORS.neutral.white,
+                }}
+              >
+                <h2
+                  className="text-lg font-semibold"
+                  style={{
+                    color: COLORS.neutral.black,
+                  }}
+                >
+                  {localize.health.select_pet_title}
+                </h2>
+
+                <p
+                  className="mt-2 max-w-sm text-sm"
+                  style={{
+                    color: COLORS.grey[600],
+                  }}
+                >
+                  {localize.health.select_pet_description}
+                </p>
+              </div>
+            )}
+
+            {selectedPet && (
+              <>
                 <div
-                  className="mb-6 flex rounded-lg border bg-white p-1"
+                  className="flex rounded-lg border bg-white p-1"
                   style={{
                     borderColor: COLORS.grey[200],
                   }}
@@ -268,6 +270,7 @@ export default function HealthPassportPage() {
                         activeTab === "vaccinations"
                           ? COLORS.primary.DEFAULT
                           : "transparent",
+
                       color:
                         activeTab === "vaccinations"
                           ? COLORS.neutral.white
@@ -286,6 +289,7 @@ export default function HealthPassportPage() {
                         activeTab === "medications"
                           ? COLORS.primary.DEFAULT
                           : "transparent",
+
                       color:
                         activeTab === "medications"
                           ? COLORS.neutral.white

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import AddMedicationModal from "@/components/modals/AddMedicationModal";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
@@ -16,6 +17,284 @@ import { getMedicationStatus } from "@/utils/medicationStatus";
 
 interface MedicationSectionProps {
   petId: string;
+}
+
+interface MedicationActionMenuProps {
+  medication: Medication;
+  onEdit: (medication: Medication) => void;
+  onMarkAsCompleted: (medication: Medication) => void;
+  onStopMedication: (medication: Medication) => void;
+  onDelete: (medication: Medication) => void;
+}
+
+function MedicationActionMenu({
+  medication,
+  onEdit,
+  onMarkAsCompleted,
+  onStopMedication,
+  onDelete,
+}: MedicationActionMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [position, setPosition] = useState({
+    top: 0,
+    left: 0,
+  });
+
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const updatePosition = () => {
+    if (!buttonRef.current) {
+      return;
+    }
+
+    const rect = buttonRef.current.getBoundingClientRect();
+
+    const menuWidth = window.innerWidth < 640 ? 148 : 160;
+
+    const menuHeight = 176;
+
+    const screenPadding = 8;
+    const menuSpacing = 6;
+
+    let top = rect.bottom + menuSpacing;
+
+    let left = rect.right - menuWidth;
+
+    if (left < screenPadding) {
+      left = screenPadding;
+    }
+
+    if (left + menuWidth > window.innerWidth - screenPadding) {
+      left = window.innerWidth - menuWidth - screenPadding;
+    }
+
+    if (top + menuHeight > window.innerHeight - screenPadding) {
+      top = rect.top - menuHeight - menuSpacing;
+    }
+
+    if (top < screenPadding) {
+      top = screenPadding;
+    }
+
+    setPosition({
+      top,
+      left,
+    });
+  };
+
+  const handleToggle = () => {
+    if (!isOpen) {
+      updatePosition();
+    }
+
+    setIsOpen((current) => !current);
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      const menuElement = document.getElementById(
+        `medication-action-menu-${medication.id}`,
+      );
+
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(target) &&
+        menuElement &&
+        !menuElement.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleScroll = () => {
+      updatePosition();
+    };
+
+    const handleResize = () => {
+      updatePosition();
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    window.addEventListener("scroll", handleScroll, true);
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+
+      window.removeEventListener("scroll", handleScroll, true);
+
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [isOpen, medication.id]);
+
+  const handleEdit = () => {
+    setIsOpen(false);
+    onEdit(medication);
+  };
+
+  const handleMarkAsCompleted = () => {
+    setIsOpen(false);
+    onMarkAsCompleted(medication);
+  };
+
+  const handleStopMedication = () => {
+    setIsOpen(false);
+    onStopMedication(medication);
+  };
+
+  const handleDelete = () => {
+    setIsOpen(false);
+    onDelete(medication);
+  };
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={handleToggle}
+        aria-label={`${medication.medicationName} actions`}
+        aria-expanded={isOpen}
+        className="
+          flex
+          h-9
+          w-9
+          items-center
+          justify-center
+          rounded-md
+          text-lg
+          font-semibold
+          transition-colors
+          hover:bg-slate-100
+          active:bg-slate-200
+        "
+        style={{
+          color: COLORS.grey[600],
+        }}
+      >
+        ⋮
+      </button>
+
+      {isOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            id={`medication-action-menu-${medication.id}`}
+            className="
+              fixed
+              z-[9999]
+              w-[148px]
+              overflow-hidden
+              rounded-md
+              border
+              bg-white
+              py-1
+              shadow-lg
+              sm:w-40
+            "
+            style={{
+              top: `${position.top}px`,
+              left: `${position.left}px`,
+              borderColor: COLORS.grey[200],
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleEdit}
+              className="
+                block
+                min-h-10
+                w-full
+                px-4
+                py-2
+                text-left
+                text-sm
+                hover:bg-slate-50
+                active:bg-slate-100
+              "
+              style={{
+                color: COLORS.grey[700],
+              }}
+            >
+              {localize.health.edit}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleMarkAsCompleted}
+              className="
+                block
+                min-h-10
+                w-full
+                px-4
+                py-2
+                text-left
+                text-sm
+                hover:bg-slate-50
+                active:bg-slate-100
+              "
+              style={{
+                color: COLORS.status.green,
+              }}
+            >
+              {localize.health.mark_as_completed}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleStopMedication}
+              className="
+                block
+                min-h-10
+                w-full
+                px-4
+                py-2
+                text-left
+                text-sm
+                hover:bg-slate-50
+                active:bg-slate-100
+              "
+              style={{
+                color: COLORS.status.red,
+              }}
+            >
+              {localize.health.stop_medication}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="
+                block
+                min-h-10
+                w-full
+                px-4
+                py-2
+                text-left
+                text-sm
+                hover:bg-slate-50
+                active:bg-slate-100
+              "
+              style={{
+                color: COLORS.status.red,
+              }}
+            >
+              {localize.health.delete}
+            </button>
+          </div>,
+          document.body,
+        )}
+    </>
+  );
 }
 
 export default function MedicationSection({ petId }: MedicationSectionProps) {
@@ -35,9 +314,8 @@ export default function MedicationSection({ petId }: MedicationSectionProps) {
 
   const [isStopModalOpen, setIsStopModalOpen] = useState(false);
 
-  const petMedications = useMemo(
-    () => medications.filter((medication) => medication.petId === petId),
-    [medications, petId],
+  const petMedications = medications.filter(
+    (medication) => medication.petId === petId,
   );
 
   const getStatusLabel = (status: Medication["status"]) => {
@@ -172,6 +450,7 @@ export default function MedicationSection({ petId }: MedicationSectionProps) {
     {
       key: "medicationName",
       label: localize.health.medication_name,
+
       render: (medication: Medication) => (
         <span
           className="font-medium"
@@ -187,36 +466,49 @@ export default function MedicationSection({ petId }: MedicationSectionProps) {
     {
       key: "dosage",
       label: localize.health.dosage,
+
       render: (medication: Medication) => medication.dosage || "-",
     },
 
     {
       key: "frequency",
       label: localize.health.frequency,
+
       render: (medication: Medication) => medication.frequency || "-",
     },
 
     {
       key: "startDate",
       label: localize.health.start_date,
+
       render: (medication: Medication) => formatDate(medication.startDate),
     },
 
     {
       key: "endDate",
       label: localize.health.end_date,
+
       render: (medication: Medication) => formatDate(medication.endDate),
     },
 
     {
       key: "status",
       label: localize.health.status,
+
       render: (medication: Medication) => {
         const status = getMedicationStatus(medication);
 
         return (
           <span
-            className="inline-flex rounded-full px-2.5 py-1 text-xs font-medium"
+            className="
+              inline-flex
+              whitespace-nowrap
+              rounded-full
+              px-2.5
+              py-1
+              text-xs
+              font-medium
+            "
             style={getStatusStyle(status)}
           >
             {getStatusLabel(status)}
@@ -230,64 +522,13 @@ export default function MedicationSection({ petId }: MedicationSectionProps) {
       label: localize.health.actions,
 
       render: (medication: Medication) => (
-        <div className="relative">
-          <details className="group">
-            <summary
-              className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-md text-lg font-semibold transition-colors hover:bg-slate-100"
-              style={{
-                color: COLORS.grey[600],
-              }}
-            >
-              ⋮
-            </summary>
-
-            <div className="absolute right-0 z-20 mt-1 w-40 rounded-md border bg-white py-1 shadow-lg">
-              <button
-                type="button"
-                onClick={() => handleEditMedication(medication)}
-                className="block w-full px-4 py-2 text-left text-sm hover:bg-slate-50"
-                style={{
-                  color: COLORS.grey[700],
-                }}
-              >
-                {localize.health.edit}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleMarkAsCompleted(medication)}
-                className="block w-full px-4 py-2 text-left text-sm hover:bg-slate-50"
-                style={{
-                  color: COLORS.status.green,
-                }}
-              >
-                {localize.health.mark_as_completed}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleStopMedication(medication)}
-                className="block w-full px-4 py-2 text-left text-sm hover:bg-slate-50"
-                style={{
-                  color: COLORS.status.red,
-                }}
-              >
-                {localize.health.stop_medication}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDeleteClick(medication)}
-                className="block w-full px-4 py-2 text-left text-sm hover:bg-slate-50"
-                style={{
-                  color: COLORS.status.red,
-                }}
-              >
-                {localize.health.delete}
-              </button>
-            </div>
-          </details>
-        </div>
+        <MedicationActionMenu
+          medication={medication}
+          onEdit={handleEditMedication}
+          onMarkAsCompleted={handleMarkAsCompleted}
+          onStopMedication={handleStopMedication}
+          onDelete={handleDeleteClick}
+        />
       ),
     },
   ];
@@ -300,8 +541,21 @@ export default function MedicationSection({ petId }: MedicationSectionProps) {
           borderColor: COLORS.grey[200],
         }}
       >
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <div>
+        <div
+          className="
+            flex
+            flex-col
+            gap-3
+            border-b
+            px-4
+            py-4
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
+            sm:px-6
+          "
+        >
+          <div className="min-w-0">
             <h2
               className="text-lg font-semibold"
               style={{
@@ -324,7 +578,18 @@ export default function MedicationSection({ petId }: MedicationSectionProps) {
           <button
             type="button"
             onClick={handleAddMedication}
-            className="rounded-md px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+            className="
+              w-full
+              rounded-md
+              px-4
+              py-2
+              text-sm
+              font-medium
+              text-white
+              transition-opacity
+              hover:opacity-90
+              sm:w-auto
+            "
             style={{
               backgroundColor: COLORS.primary.DEFAULT,
             }}
@@ -348,6 +613,7 @@ export default function MedicationSection({ petId }: MedicationSectionProps) {
         medication={selectedMedication}
       />
 
+      {/* Delete Confirmation */}
       <ConfirmationModal
         open={isDeleteModalOpen}
         onClose={handleDeleteModalClose}
