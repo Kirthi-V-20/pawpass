@@ -90,7 +90,7 @@ export const localize = {
     dob: "Date of Birth",
     color: "Color",
     weight: "Weight",
-    notes: "Notes / About Pet",
+    notes: "About Vaccine",
 
     view_qr: "View QR",
     download: "Download",
